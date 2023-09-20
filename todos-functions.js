@@ -22,6 +22,7 @@ const removeTodo = (id) => {
 }
 
 const renderTodos = (todos, filters) => {
+    const todoEl = document.querySelector('#todos')
     const searchTodos = todos.filter((todo) => {
         // console.log(todo)
         const searchTExtMatch = todo.text.toLowerCase().includes(filters.searchText.toLowerCase())
@@ -31,49 +32,63 @@ const renderTodos = (todos, filters) => {
 
     const incompleteTodos = searchTodos.filter((e, index) => !e.completed)
 
-    document.querySelector('#todos').innerHTML = ''
-    document.querySelector('#todos').appendChild(generateSummary(incompleteTodos))
+    todoEl.innerHTML = ''
+    todoEl.appendChild(generateSummary(incompleteTodos))
 
-    searchTodos.forEach((todo) => {
-        document.querySelector('#todos').appendChild(generateTodosDOM(todo)) // accept only tag element
-        // document.querySelector('#todos').append('p') // accept text & tag element
-    })
+    if (searchTodos.length > 0) {
+        searchTodos.forEach((todo) => {
+            todoEl.appendChild(generateTodosDOM(todo)) // accept only tag element
+            // document.querySelector('#todos').append('p') // accept text & tag element
+        })
+    } else {
+        const emptyMessage = document.createElement('p')
+        emptyMessage.classList.add('empty-message')
+        emptyMessage.textContent = 'No to-dos to show'
+        todoEl.appendChild(emptyMessage) // accept only tag element
+    }
 }
 
 const generateTodosDOM = (todo) => {
-    const todosEl = document.createElement('div')
+    const todoEl = document.createElement('label')
+    const containerEl = document.createElement('div')
     // p.textContent = todo.text // content format not preserve all come in single line *FASTER*
     // p.innerText = todo.text // preserve content format *SLOWER*
-    const input = document.createElement('input')
-    const span = document.createElement('span')
-    const button = document.createElement('button')
-    button.addEventListener('click', () => {
+    const checkbox = document.createElement('input')
+    const todoText = document.createElement('span')
+    const removeButton = document.createElement('button')
+
+
+    // input.type = 'checkbox'
+    // input.id = 'check-box'
+    checkbox.setAttribute('type', 'checkbox')
+    checkbox.checked = todo.completed
+    containerEl.appendChild(checkbox)
+    checkbox.addEventListener('change', () => {
+        toggleTodo(todo.id)
+        saveTodos(todos)
+        renderTodos(todos, filters)
+    })
+
+    todoText.textContent = todo.text
+    containerEl.appendChild(todoText)
+
+    todoEl.classList.add('list-item')
+    containerEl.classList.add('list-item__container')
+    todoEl.appendChild(containerEl)
+
+
+    removeButton.textContent = 'remove'
+    removeButton.classList.add('button', 'button--text')
+    todoEl.appendChild(removeButton)
+    removeButton.addEventListener('click', () => {
         // console.log(todo.id)
         removeTodo(todo.id)
         saveTodos(todos)
         renderTodos(todos, filters)
     })
 
-    // input.type = 'checkbox'
-    // input.id = 'check-box'
-    input.setAttribute('type', 'checkbox')
-    if (todo.completed) {
-        input.checked = true
-    }
-    todosEl.appendChild(input)
-    input.addEventListener('change', () => {
-        toggleTodo(todo.id)
-        saveTodos(todos)
-        renderTodos(todos, filters)
-    })
 
-
-    button.textContent = 'Remove'
-    span.textContent = todo.text
-    todosEl.appendChild(span)
-
-    todosEl.appendChild(button)
-    return todosEl
+    return todoEl
 }
 
 const toggleTodo = (id) => {
@@ -96,6 +111,8 @@ const toggleTodo = (id) => {
 }
 const generateSummary = (incompleteTodos) => {
     const summary = document.createElement('h2')
-    summary.textContent = `You have ${incompleteTodos.length} todos left!`
+    summary.classList.add('list-title')
+    const plural = incompleteTodos.length > 1 ? 's' : ''
+    summary.textContent = `You have ${incompleteTodos.length} todo${plural} left!`
     return summary
 }
